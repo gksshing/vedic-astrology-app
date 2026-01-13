@@ -26,10 +26,30 @@ RASHIS = [
 
 def get_location_coordinates(city_name):
     try:
-        geolocator = Nominatim(user_agent="vedic_astrology_app")
+        geolocator = Nominatim(user_agent="vedic_astrology_app", timeout=10)
+        # 먼저 원래 입력으로 검색
         location = geolocator.geocode(city_name)
-        return (location.latitude, location.longitude, location.address) if location else (None, None, None)
-    except: return None, None, None
+        if location:
+            return (location.latitude, location.longitude, location.address)
+        # 한국 도시일 경우 ", South Korea" 추가해서 재검색
+        location = geolocator.geocode(f"{city_name}, South Korea")
+        if location:
+            return (location.latitude, location.longitude, location.address)
+        # 영문명으로도 시도
+        korean_to_english = {
+            "서울": "Seoul", "부산": "Busan", "대구": "Daegu", "인천": "Incheon",
+            "광주": "Gwangju", "대전": "Daejeon", "울산": "Ulsan", "세종": "Sejong",
+            "수원": "Suwon", "성남": "Seongnam", "고양": "Goyang", "용인": "Yongin",
+            "창원": "Changwon", "청주": "Cheongju", "전주": "Jeonju", "천안": "Cheonan",
+            "안산": "Ansan", "안양": "Anyang", "남양주": "Namyangju", "화성": "Hwaseong"
+        }
+        if city_name in korean_to_english:
+            location = geolocator.geocode(f"{korean_to_english[city_name]}, South Korea")
+            if location:
+                return (location.latitude, location.longitude, location.address)
+        return (None, None, None)
+    except Exception as e:
+        return None, None, None
 
 def get_timezone(lat, lon):
     try: return TimezoneFinder().timezone_at(lat=lat, lng=lon) or "UTC"
