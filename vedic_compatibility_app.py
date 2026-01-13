@@ -62,46 +62,67 @@ def calculate_chart(name, year, month, day, hour, minute, lat, lon, tz_str):
             zodiac_type="Sidereal", sidereal_mode="LAHIRI"
         )
         
+        # 안전한 속성 접근 헬퍼 함수
+        def get_lon(obj):
+            if obj is None:
+                return 0
+            # 다양한 속성명 시도
+            for attr in ['abs_pos', 'position', 'lon', 'longitude']:
+                if hasattr(obj, attr):
+                    val = getattr(obj, attr)
+                    if val is not None:
+                        return val
+            return 0
+        
+        def get_sign(obj):
+            if obj is None:
+                return "Ari"
+            if hasattr(obj, 'sign') and obj.sign:
+                return obj.sign
+            return "Ari"
+        
         # 행성 정보 추출
-        moon_lon = subject.moon.abs_pos
-        sun_lon = subject.sun.abs_pos
-        rahu_lon = subject.mean_node.abs_pos
+        moon_lon = get_lon(subject.moon)
+        sun_lon = get_lon(subject.sun)
+        rahu_lon = get_lon(subject.mean_node) if hasattr(subject, 'mean_node') else get_lon(subject.true_node) if hasattr(subject, 'true_node') else 0
         
-        # Ketu는 Rahu의 정반대 (180도, 즉 6개 별자리 반대편)
+        # Ketu는 Rahu의 정반대 (180도)
         ketu_lon = (rahu_lon + 180) % 360
-        rahu_sign = subject.mean_node.sign
+        rahu_sign = get_sign(subject.mean_node) if hasattr(subject, 'mean_node') else get_sign(subject.true_node) if hasattr(subject, 'true_node') else "Ari"
         
-        # Ketu 별자리 계산 (Rahu에서 6칸 반대)
+        # Ketu 별자리 계산
         sign_order = ["Ari", "Tau", "Gem", "Can", "Leo", "Vir", "Lib", "Sco", "Sag", "Cap", "Aqu", "Pis"]
         rahu_idx = sign_order.index(rahu_sign) if rahu_sign in sign_order else 0
         ketu_sign = sign_order[(rahu_idx + 6) % 12]
         
         chart_data = {
             "name": name,
-            "ascendant": RASHI_KO.get(subject.first_house.sign, subject.first_house.sign),
-            "moon_sign": RASHI_KO.get(subject.moon.sign, subject.moon.sign),
+            "ascendant": RASHI_KO.get(get_sign(subject.first_house), get_sign(subject.first_house)),
+            "moon_sign": RASHI_KO.get(get_sign(subject.moon), get_sign(subject.moon)),
             "moon_lon": moon_lon,
             "nakshatra": get_nakshatra(moon_lon),
-            "sun_sign": RASHI_KO.get(subject.sun.sign, subject.sun.sign),
+            "sun_sign": RASHI_KO.get(get_sign(subject.sun), get_sign(subject.sun)),
             "rahu": RASHI_KO.get(rahu_sign, rahu_sign),
             "rahu_lon": rahu_lon,
             "ketu": RASHI_KO.get(ketu_sign, ketu_sign),
             "ketu_lon": ketu_lon,
             "planets": {
-                "태양": {"sign": RASHI_KO.get(subject.sun.sign, subject.sun.sign), "lon": subject.sun.abs_pos},
-                "달": {"sign": RASHI_KO.get(subject.moon.sign, subject.moon.sign), "lon": subject.moon.abs_pos},
-                "수성": {"sign": RASHI_KO.get(subject.mercury.sign, subject.mercury.sign), "lon": subject.mercury.abs_pos},
-                "금성": {"sign": RASHI_KO.get(subject.venus.sign, subject.venus.sign), "lon": subject.venus.abs_pos},
-                "화성": {"sign": RASHI_KO.get(subject.mars.sign, subject.mars.sign), "lon": subject.mars.abs_pos},
-                "목성": {"sign": RASHI_KO.get(subject.jupiter.sign, subject.jupiter.sign), "lon": subject.jupiter.abs_pos},
-                "토성": {"sign": RASHI_KO.get(subject.saturn.sign, subject.saturn.sign), "lon": subject.saturn.abs_pos},
-                "라후": {"sign": RASHI_KO.get(rahu_sign, rahu_sign), "lon": rahu_lon},
-                "케투": {"sign": RASHI_KO.get(ketu_sign, ketu_sign), "lon": ketu_lon},
+                "태양": {"sign": RASHI_KO.get(get_sign(subject.sun), ""), "lon": get_lon(subject.sun)},
+                "달": {"sign": RASHI_KO.get(get_sign(subject.moon), ""), "lon": get_lon(subject.moon)},
+                "수성": {"sign": RASHI_KO.get(get_sign(subject.mercury), ""), "lon": get_lon(subject.mercury)},
+                "금성": {"sign": RASHI_KO.get(get_sign(subject.venus), ""), "lon": get_lon(subject.venus)},
+                "화성": {"sign": RASHI_KO.get(get_sign(subject.mars), ""), "lon": get_lon(subject.mars)},
+                "목성": {"sign": RASHI_KO.get(get_sign(subject.jupiter), ""), "lon": get_lon(subject.jupiter)},
+                "토성": {"sign": RASHI_KO.get(get_sign(subject.saturn), ""), "lon": get_lon(subject.saturn)},
+                "라후": {"sign": RASHI_KO.get(rahu_sign, ""), "lon": rahu_lon},
+                "케투": {"sign": RASHI_KO.get(ketu_sign, ""), "lon": ketu_lon},
             }
         }
         return chart_data
     except Exception as e:
         st.error(f"차트 계산 오류: {e}")
+        import traceback
+        st.error(traceback.format_exc())
         return None
 
 def calculate_ashta_kuta(chart1, chart2):
