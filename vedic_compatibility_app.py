@@ -105,61 +105,62 @@ def apply_custom_css():
     st.markdown("""<style>
     .stApp{background:linear-gradient(135deg,#0d0d1a,#1a1a2e,#16213e);}
     h1{color:#ffd700!important;text-align:center;text-shadow:0 0 20px rgba(255,215,0,0.5);}
-    h2,h3{color:#e6c200!important;}
+    h2,h3,h4{color:#ffd700!important;}
     .stButton>button{background:linear-gradient(135deg,#ffd700,#ff8c00)!important;color:#1a1a2e!important;border:none!important;border-radius:25px!important;padding:15px 40px!important;font-weight:bold!important;box-shadow:0 0 20px rgba(255,215,0,0.4)!important;}
     .info-card{background:rgba(255,215,0,0.1);border-left:4px solid #ffd700;padding:15px;margin:10px 0;border-radius:0 10px 10px 0;}
     .result-box{background:linear-gradient(135deg,rgba(26,26,46,0.9),rgba(22,33,62,0.9));border:2px solid #ffd700;border-radius:15px;padding:25px;margin:20px 0;box-shadow:0 0 30px rgba(255,215,0,0.2);}
-    .vedic-info{background:rgba(139,69,19,0.2);border:1px solid #daa520;border-radius:15px;padding:20px;margin:20px 0;}
-    p,li,td,th{color:#ffffff!important;}
+    p,li,td,th,span{color:#ffffff!important;}
     label{color:#ffd700!important;}
+    .stExpander{border:1px solid #ffd700!important;border-radius:10px!important;}
     </style>""", unsafe_allow_html=True)
 
 def show_vedic_info():
-    st.markdown("""<div class="vedic-info">
-    <h3 style="color:#ffd700;text-align:center;">🕉️ 베딕 점성술(Jyotish)이란?</h3>
-    <p style="color:#e0e0e0;line-height:1.8;"><b>베딕 점성술(Vedic Astrology)</b>, 또는 <b>조티쉬(Jyotish)</b>는 약 5,000년 전 인도에서 시작된 고대 점성술 체계입니다. "조티쉬"는 산스크리트어로 "빛의 과학" 또는 "천체의 지혜"를 의미합니다.</p>
+    st.markdown("### 🕉️ 베딕 점성술(Jyotish)이란?")
+    st.markdown("""
+**베딕 점성술(Vedic Astrology)**, 또는 **조티쉬(Jyotish)**는 약 5,000년 전 인도에서 시작된 고대 점성술 체계입니다. 
+"조티쉬"는 산스크리트어로 **"빛의 과학"** 또는 **"천체의 지혜"**를 의미합니다.
+    """)
+    
+    st.markdown("### 🌌 무궁무진한 경우의 수")
+    st.markdown("""
+베딕 점성술의 가장 큰 강점은 그 **엄청난 조합의 다양성**입니다:
+- **12 라시(별자리)** × **27 낙샤트라(달의 별자리)** × **12 상승궁** = **3,888가지 기본 조합**
+- 여기에 7개 행성의 위치, 12개 하우스 배치, 행성 간 각도(Aspects)까지 고려하면...
+- 🔢 **수십억 가지 이상의 고유한 차트 조합**이 가능합니다!
+- 두 사람의 궁합 분석 시: **3,888² = 약 1,500만 가지** 이상의 기본 조합
 
-    <h4 style="color:#ffd700;">🌌 무궁무진한 경우의 수</h4>
-    <p style="color:#e0e0e0;">베딕 점성술의 가장 큰 강점은 그 <b>엄청난 조합의 다양성</b>입니다:</p>
-    <ul style="color:#e0e0e0;">
-    <li><b>12 라시(별자리)</b> × <b>27 낙샤트라(달의 별자리)</b> × <b>12 상승궁</b> = <b>3,888가지 기본 조합</b></li>
-    <li>여기에 7개 행성의 위치, 12개 하우스 배치, 행성 간 각도(Aspects)까지 고려하면...</li>
-    <li>🔢 <b>수십억 가지 이상의 고유한 차트 조합</b>이 가능합니다!</li>
-    <li>두 사람의 궁합 분석 시: <b>3,888² = 약 1,500만 가지</b> 이상의 기본 조합</li>
-    </ul>
-    <p style="color:#b8860b;font-style:italic;">→ 이것이 베딕 점성술이 각 개인의 독특한 운명을 정밀하게 읽어낼 수 있는 이유입니다.</p>
-
-    <h4 style="color:#ffd700;">🌙 서양 점성술과의 차이점</h4>
-    <ul style="color:#e0e0e0;">
-    <li><b>항성 황도대(Sidereal Zodiac)</b>: 실제 별자리 위치 기반 (서양은 계절 기반)</li>
-    <li><b>달 중심</b>: 태양보다 달의 위치를 더 중요시함</li>
-    <li><b>27 낙샤트라</b>: 서양의 12별자리보다 2배 이상 세밀한 분류</li>
-    <li><b>다샤 시스템</b>: 행성 주기에 따른 시간대별 운명 예측</li>
-    </ul>
-
-    <h4 style="color:#ffd700;">💑 아쉬타쿠타(Ashta Kuta) 궁합 시스템</h4>
-    <p style="color:#e0e0e0;">인도에서 전통적으로 결혼 전 두 사람의 궁합을 분석하는데 사용됩니다. 8가지(Ashta) 요소(Kuta)를 분석하여 평가합니다:</p>
-    <table style="width:100%;color:#e0e0e0;border-collapse:collapse;margin:10px 0;">
-    <tr style="background:rgba(255,215,0,0.2);"><th style="padding:8px;border:1px solid #daa520;">쿠타</th><th style="padding:8px;border:1px solid #daa520;">의미</th><th style="padding:8px;border:1px solid #daa520;">100점 환산</th></tr>
-    <tr><td style="padding:8px;border:1px solid #555;">바르나(Varna)</td><td style="padding:8px;border:1px solid #555;">영적 발전 호환성</td><td style="padding:8px;border:1px solid #555;text-align:center;">~3점</td></tr>
-    <tr><td style="padding:8px;border:1px solid #555;">바쉬야(Vashya)</td><td style="padding:8px;border:1px solid #555;">상호 매력과 지배력</td><td style="padding:8px;border:1px solid #555;text-align:center;">~6점</td></tr>
-    <tr><td style="padding:8px;border:1px solid #555;">타라(Tara)</td><td style="padding:8px;border:1px solid #555;">운명과 건강</td><td style="padding:8px;border:1px solid #555;text-align:center;">~8점</td></tr>
-    <tr><td style="padding:8px;border:1px solid #555;">요니(Yoni)</td><td style="padding:8px;border:1px solid #555;">친밀함과 조화</td><td style="padding:8px;border:1px solid #555;text-align:center;">~11점</td></tr>
-    <tr><td style="padding:8px;border:1px solid #555;">그라하 마이트리(Graha Maitri)</td><td style="padding:8px;border:1px solid #555;">정신적 호환성</td><td style="padding:8px;border:1px solid #555;text-align:center;">~14점</td></tr>
-    <tr><td style="padding:8px;border:1px solid #555;">가나(Gana)</td><td style="padding:8px;border:1px solid #555;">기질과 성격</td><td style="padding:8px;border:1px solid #555;text-align:center;">~17점</td></tr>
-    <tr><td style="padding:8px;border:1px solid #555;">바쿠트(Bhakut)</td><td style="padding:8px;border:1px solid #555;">감정적 조화</td><td style="padding:8px;border:1px solid #555;text-align:center;">~19점</td></tr>
-    <tr><td style="padding:8px;border:1px solid #555;">나디(Nadi)</td><td style="padding:8px;border:1px solid #555;">건강과 자녀 운</td><td style="padding:8px;border:1px solid #555;text-align:center;">~22점</td></tr>
-    <tr style="background:rgba(255,215,0,0.1);"><td colspan="2" style="padding:8px;border:1px solid #daa520;font-weight:bold;">총점</td><td style="padding:8px;border:1px solid #daa520;text-align:center;font-weight:bold;">100점</td></tr>
-    </table>
-    <p style="color:#b8860b;font-style:italic;text-align:center;margin-top:15px;">✨ 50점 이상 = 좋은 궁합 | 70점 이상 = 우수한 궁합 | 85점 이상 = 천생연분! ✨</p>
-    </div>""", unsafe_allow_html=True)
+→ *이것이 베딕 점성술이 각 개인의 독특한 운명을 정밀하게 읽어낼 수 있는 이유입니다.*
+    """)
+    
+    st.markdown("### 🌙 서양 점성술과의 차이점")
+    st.markdown("""
+- **항성 황도대(Sidereal Zodiac)**: 실제 별자리 위치 기반 (서양은 계절 기반)
+- **달 중심**: 태양보다 달의 위치를 더 중요시함
+- **27 낙샤트라**: 서양의 12별자리보다 2배 이상 세밀한 분류
+- **다샤 시스템**: 행성 주기에 따른 시간대별 운명 예측
+    """)
+    
+    st.markdown("### 💑 아쉬타쿠타(Ashta Kuta) 궁합 시스템")
+    st.markdown("인도에서 전통적으로 결혼 전 두 사람의 궁합을 분석하는데 사용됩니다. 8가지(Ashta) 요소(Kuta)를 분석하여 평가합니다:")
+    
+    import pandas as pd
+    kuta_data = pd.DataFrame({
+        "쿠타": ["바르나(Varna)", "바쉬야(Vashya)", "타라(Tara)", "요니(Yoni)", 
+                "그라하 마이트리", "가나(Gana)", "바쿠트(Bhakut)", "나디(Nadi)", "📊 총점"],
+        "의미": ["영적 발전 호환성", "상호 매력과 지배력", "운명과 건강", "친밀함과 조화",
+                "정신적 호환성", "기질과 성격", "감정적 조화", "건강과 자녀 운", ""],
+        "100점 환산": ["~3점", "~6점", "~8점", "~11점", "~14점", "~17점", "~19점", "~22점", "💯 100점"]
+    })
+    st.dataframe(kuta_data, hide_index=True, use_container_width=True)
+    
+    st.success("✨ **50점 이상** = 좋은 궁합 | **70점 이상** = 우수한 궁합 | **85점 이상** = 천생연분! ✨")
 
 def main():
     st.set_page_config(page_title="🌟 베딕 점성술 궁합", page_icon="🔮", layout="wide")
     apply_custom_css()
 
     st.markdown('<h1>🌟 베딕 점성술 궁합 분석 🌟</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align:center;color:#b8860b;font-style:italic;">✨ 별들이 속삭이는 당신의 운명적 궁합을 발견하세요 ✨</p>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align:center;color:#ffd700;font-style:italic;font-size:18px;">✨ 별들이 속삭이는 당신의 운명적 궁합을 발견하세요 ✨</p>', unsafe_allow_html=True)
 
     with st.expander("🕉️ 베딕 점성술에 대해 알아보기", expanded=False):
         show_vedic_info()
@@ -204,21 +205,29 @@ def main():
             st.markdown("## 🌠 입력된 출생 정보")
             c1, c2 = st.columns(2)
             with c1:
-                st.markdown(f'''<div class="info-card">
-                    <h4 style="color:#ffd700;">🌙 {name1}</h4>
-                    <p>📅 생년월일: {date1}</p>
-                    <p>⏰ 출생 시간: {time1}</p>
-                    <p>📍 출생 장소: {addr1 or city1}</p>
-                    <p>🌍 시간대: {tz1}</p>
-                </div>''', unsafe_allow_html=True)
+                st.info(f"""
+**🌙 {name1}**
+
+📅 생년월일: {date1}
+
+⏰ 출생 시간: {time1}
+
+📍 출생 장소: {addr1 or city1}
+
+🌍 시간대: {tz1}
+                """)
             with c2:
-                st.markdown(f'''<div class="info-card">
-                    <h4 style="color:#ffd700;">⭐ {name2}</h4>
-                    <p>📅 생년월일: {date2}</p>
-                    <p>⏰ 출생 시간: {time2}</p>
-                    <p>📍 출생 장소: {addr2 or city2}</p>
-                    <p>🌍 시간대: {tz2}</p>
-                </div>''', unsafe_allow_html=True)
+                st.info(f"""
+**⭐ {name2}**
+
+📅 생년월일: {date2}
+
+⏰ 출생 시간: {time2}
+
+📍 출생 장소: {addr2 or city2}
+
+🌍 시간대: {tz2}
+                """)
 
             st.markdown("---")
             st.markdown("## 🔮 아쉬타쿠타 궁합 분석")
@@ -230,13 +239,10 @@ def main():
                           "city": city2, "lat": lat2, "lon": lon2, "timezone": tz2}
                 analysis = analyze_compatibility_with_openai(p1_data, p2_data)
 
-            st.markdown(f'''<div class="result-box">
-                <h3 style="color:#ffd700;text-align:center;">💫 {name1} & {name2}의 운명적 궁합 💫</h3>
-                <hr style="border-color:#ffd700;opacity:0.3;">
-                <div style="color:#e0e0e0;line-height:1.8;">{analysis.replace(chr(10),"<br>")}</div>
-            </div>''', unsafe_allow_html=True)
+            st.markdown(f"### 💫 {name1} & {name2}의 운명적 궁합 💫")
+            st.markdown(analysis)
 
-            st.markdown('<p style="text-align:center;color:#888;font-size:12px;">⚠️ 이 분석은 오락 목적입니다. 실제 관계는 상호 이해와 존중이 기반입니다.</p>', unsafe_allow_html=True)
+            st.caption("⚠️ 이 분석은 오락 목적입니다. 실제 관계는 상호 이해와 존중이 기반입니다.")
 
 if __name__ == "__main__":
     main()
