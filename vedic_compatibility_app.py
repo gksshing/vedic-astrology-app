@@ -170,14 +170,14 @@ def main():
     with col1:
         st.markdown("### 🌙 첫 번째 사람")
         name1 = st.text_input("이름", key="n1", placeholder="이름")
-        date1 = st.date_input("생년월일", key="d1", value=date(1990,1,1))
-        time1 = st.time_input("출생 시간", key="t1", value=time(12,0))
+        date1 = st.date_input("생년월일", key="d1", value=date(1990,1,1), min_value=date(1900,1,1), max_value=date(2026,12,31))
+        time1 = st.text_input("출생 시간", key="t1", placeholder="예: 14:30 또는 오후 2시 30분")
         city1 = st.text_input("출생 도시", key="c1", placeholder="예: Seoul 또는 서울")
     with col2:
         st.markdown("### ⭐ 두 번째 사람")
         name2 = st.text_input("이름", key="n2", placeholder="이름")
-        date2 = st.date_input("생년월일", key="d2", value=date(1990,1,1))
-        time2 = st.time_input("출생 시간", key="t2", value=time(12,0))
+        date2 = st.date_input("생년월일", key="d2", value=date(1990,1,1), min_value=date(1900,1,1), max_value=date(2026,12,31))
+        time2 = st.text_input("출생 시간", key="t2", placeholder="예: 09:15 또는 오전 9시 15분")
         city2 = st.text_input("출생 도시", key="c2", placeholder="예: Busan 또는 부산")
 
     st.markdown("---")
