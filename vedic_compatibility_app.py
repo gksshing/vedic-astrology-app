@@ -130,7 +130,7 @@ Format your ENTIRE response in Korean (한국어)."""
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
-            temperature=0.8,
+            temperature=0.3,
             max_tokens=3000
         )
         return response.choices[0].message.content
@@ -287,3 +287,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
