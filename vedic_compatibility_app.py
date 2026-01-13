@@ -334,7 +334,7 @@ def apply_custom_css():
 def show_vedic_info():
     st.markdown("### 🕉️ 베딕 점성술(Jyotish)이란?")
     st.markdown("""
-**베딕 점성술(Vedic Astrology)**, 또는 **조티쉬(Jyotish)**는 약 5,000년 전 인도에서 시작된 고대 점성술 체계입니다.
+**베딕 점성술(Vedic Astrology)**, 또는 **조티쉬(Jyotish)** 는 약 5,000년 전 인도에서 시작된 고대 점성술 체계입니다.
     """)
     st.markdown("### 🌌 무궁무진한 경우의 수")
     st.markdown("""
@@ -466,3 +466,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
