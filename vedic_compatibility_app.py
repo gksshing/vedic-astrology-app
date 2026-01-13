@@ -112,6 +112,9 @@ def apply_custom_css():
     p,li,td,th,span{color:#ffffff!important;}
     label{color:#ffd700!important;}
     .stExpander{border:1px solid #ffd700!important;border-radius:10px!important;}
+    .stDateInput select{color:#000000!important;background-color:#ffffff!important;}
+    [data-baseweb="select"] span{color:#000000!important;}
+    [data-baseweb="popover"] div{color:#000000!important;}
     </style>""", unsafe_allow_html=True)
 
 def show_vedic_info():
