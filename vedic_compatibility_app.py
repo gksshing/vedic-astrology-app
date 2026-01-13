@@ -27,26 +27,24 @@ RASHIS = [
 def get_location_coordinates(city_name):
     try:
         geolocator = Nominatim(user_agent="vedic_astrology_app", timeout=10)
-        # 먼저 원래 입력으로 검색
+        
+        # 1차: 원래 입력으로 검색 (전세계)
         location = geolocator.geocode(city_name)
         if location:
             return (location.latitude, location.longitude, location.address)
-        # 한국 도시일 경우 ", South Korea" 추가해서 재검색
-        location = geolocator.geocode(f"{city_name}, South Korea")
-        if location:
-            return (location.latitude, location.longitude, location.address)
-        # 영문명으로도 시도
-        korean_to_english = {
-            "서울": "Seoul", "부산": "Busan", "대구": "Daegu", "인천": "Incheon",
-            "광주": "Gwangju", "대전": "Daejeon", "울산": "Ulsan", "세종": "Sejong",
-            "수원": "Suwon", "성남": "Seongnam", "고양": "Goyang", "용인": "Yongin",
-            "창원": "Changwon", "청주": "Cheongju", "전주": "Jeonju", "천안": "Cheonan",
-            "안산": "Ansan", "안양": "Anyang", "남양주": "Namyangju", "화성": "Hwaseong"
-        }
-        if city_name in korean_to_english:
-            location = geolocator.geocode(f"{korean_to_english[city_name]}, South Korea")
+        
+        # 한글이 포함되어 있으면 한국 도시로 간주
+        import re
+        if re.search('[가-힣]', city_name):
+            # 2차: ", 대한민국" 추가
+            location = geolocator.geocode(f"{city_name}, 대한민국", language="ko")
             if location:
                 return (location.latitude, location.longitude, location.address)
+            # 3차: ", South Korea" 추가
+            location = geolocator.geocode(f"{city_name}, South Korea")
+            if location:
+                return (location.latitude, location.longitude, location.address)
+        
         return (None, None, None)
     except Exception as e:
         return None, None, None
@@ -63,14 +61,22 @@ You have deep knowledge of:
 - 27 Nakshatras (lunar mansions) with their padas
 - Planetary positions and house placements
 - Ashta Kuta compatibility system
+- Rahu (North Node) and Ketu (South Node) - the karmic axis
 
 Based on the birth data provided, you will:
 1. Calculate the Vedic birth chart parameters (Lagna, Moon Sign, Nakshatra, Sun Sign)
 2. Analyze the Ashta Kuta compatibility between two people
 3. Provide scores for all 8 Kutas converted to 100-point scale
+4. Analyze the Karmic Connection (업보적 연결) based on Rahu and Ketu positions
 
-Be sophisticated, mysterious, and brutally honest.
-If the stars say it's a disaster, call it a celestial catastrophe.
+Your personality:
+- Be sophisticated, mysterious, and BRUTALLY honest
+- Speak like a proud, direct astrologer who has seen the cosmos unfold
+- Deliver philosophical insults with elegance when the stars warrant it
+- If the stars say it's a disaster, call it a celestial catastrophe
+- If compatibility is low (below 50), use the phrase "해소해야 할 악연" (karmic debt to resolve)
+- If compatibility is high (above 70), use the phrase "우주적 보상" (cosmic reward)
+
 Format your ENTIRE response in Korean (한국어)."""
 
     user = f"""다음 두 사람의 출생 정보를 바탕으로 베딕 점성술 분석을 해주세요:
@@ -88,26 +94,36 @@ Format your ENTIRE response in Korean (한국어)."""
 - 시간대: {p2_data['timezone']}
 
 다음을 수행해주세요:
-1. 각 사람의 베딕 차트 파라미터 계산 (Lahiri Ayanamsa 사용):
-   - 라그나 (상승궁/Ascendant)
-   - 달 별자리 (라시/Moon Sign)
-   - 낙샤트라 (Nakshatra) 및 파다
-   - 태양 별자리 (Sun Sign)
 
-2. 아쉬타쿠타 궁합 분석 (100점 만점 스케일):
-   - 바르나 쿠타 (~3점): 영적 호환성
-   - 바쉬야 쿠타 (~6점): 상호 매력
-   - 타라 쿠타 (~8점): 운명과 건강
-   - 요니 쿠타 (~11점): 친밀함
-   - 그라하 마이트리 (~14점): 정신적 호환성
-   - 가나 쿠타 (~17점): 기질
-   - 바쿠트 쿠타 (~19점): 감정적 조화
-   - 나디 쿠타 (~22점): 건강과 자녀
-   - 총점: X/100점
+## 1. 베딕 차트 파라미터 (각 사람별)
+- 라그나 (상승궁/Ascendant)
+- 달 별자리 (라시/Moon Sign)
+- 낙샤트라 (Nakshatra) 및 파다
+- 태양 별자리 (Sun Sign)
+- 라후 (Rahu/북쪽 달의 교점) 위치
+- 케투 (Ketu/남쪽 달의 교점) 위치
 
-3. 종합 궁합 해석 (신비롭고 심오하게)
+## 2. 아쉬타쿠타 궁합 분석 (100점 만점)
+- 바르나 쿠타 (~3점): 영적 호환성
+- 바쉬야 쿠타 (~6점): 상호 매력
+- 타라 쿠타 (~8점): 운명과 건강
+- 요니 쿠타 (~11점): 친밀함
+- 그라하 마이트리 (~14점): 정신적 호환성
+- 가나 쿠타 (~17점): 기질
+- 바쿠트 쿠타 (~19점): 감정적 조화
+- 나디 쿠타 (~22점): 건강과 자녀
+- **총점: X/100점**
 
-궁합이 나쁘면 "천체적 재앙"이라고 솔직하게 표현해주세요."""
+## 3. 🔮 Karmic Connection (업보적 연결)
+두 사람의 라후와 케투 위치를 비교 분석하여:
+- 전생에서 어떤 관계였을지 추측 (연인? 원수? 가족? 스승과 제자?)
+- 이번 생에서 만난 우주적 이유
+- 점수가 낮으면 "해소해야 할 악연"으로, 높으면 "우주적 보상"으로 해석
+- 철학적이고 직설적인 독설을 날려주세요 (우아하지만 날카롭게)
+
+## 4. 종합 궁합 해석
+신비롭고 심오하게, 그러나 고고하고 직설적인 점성술사의 말투로 마무리해주세요.
+궁합이 나쁘면 솔직하게 "천체적 재앙"이라고 표현하세요."""
 
     try:
         client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
