@@ -327,7 +327,7 @@ def main():
     apply_custom_css()
 
     st.markdown('<h1>🌟 베딕 점성술 궁합 분석 🌟</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align:center;color:#ffd700;font-style:italic;font-size:18px;">✨ Kerykeion 엔진 기반 정밀 계산 + AI 해석 ✨</p>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align:center;color:#ffd700;font-style:italic;font-size:18px;">✨ AI가 해석해주는 인도의 신비 ✨</p>', unsafe_allow_html=True)
 
     with st.expander("🕉️ 베딕 점성술에 대해 알아보기", expanded=False):
         show_vedic_info()
