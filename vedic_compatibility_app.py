@@ -4,10 +4,6 @@ from openai import OpenAI
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 import pytz
-from flatlib.datetime import Datetime
-from flatlib.geopos import GeoPos
-from flatlib.chart import Chart
-from flatlib import const
 
 NAKSHATRAS = [
     "아쉬위니 (Ashwini)", "바라니 (Bharani)", "크리티카 (Krittika)",
@@ -28,70 +24,82 @@ RASHIS = [
     "마카라 (염소자리)", "쿰바 (물병자리)", "미나 (물고기자리)"
 ]
 
-RASHI_MAPPING = {"Aries": 0, "Taurus": 1, "Gemini": 2, "Cancer": 3, "Leo": 4, "Virgo": 5,
-                "Libra": 6, "Scorpio": 7, "Sagittarius": 8, "Capricorn": 9, "Aquarius": 10, "Pisces": 11}
-
 def get_location_coordinates(city_name):
     try:
         geolocator = Nominatim(user_agent="vedic_astrology_app")
         location = geolocator.geocode(city_name)
-        return (location.latitude, location.longitude) if location else (None, None)
-    except: return None, None
+        return (location.latitude, location.longitude, location.address) if location else (None, None, None)
+    except: return None, None, None
 
 def get_timezone(lat, lon):
     try: return TimezoneFinder().timezone_at(lat=lat, lng=lon) or "UTC"
     except: return "UTC"
 
-def calculate_nakshatra(moon_longitude):
-    return NAKSHATRAS[int(moon_longitude / 13.333333) % 27]
+def analyze_compatibility_with_openai(p1_data, p2_data):
+    system = """You are a master of Vedic Astrology (Jyotish) with 30 years of experience.
+You have deep knowledge of:
+- Sidereal zodiac calculations (Lahiri Ayanamsa)
+- 12 Rashis (zodiac signs) and their characteristics
+- 27 Nakshatras (lunar mansions) with their padas
+- Planetary positions and house placements
+- Ashta Kuta compatibility system
 
-def calculate_vedic_chart(birth_date, birth_time, lat, lon):
-    try:
-        tz = pytz.timezone(get_timezone(lat, lon))
-        dt = tz.localize(datetime.combine(birth_date, birth_time))
-        utc_offset = dt.utcoffset().total_seconds() / 3600
-        offset_str = f"{'+' if utc_offset >= 0 else '-'}{abs(int(utc_offset)):02d}:{int((abs(utc_offset) % 1) * 60):02d}"
-        chart = Chart(Datetime(birth_date.strftime("%Y/%m/%d"), birth_time.strftime("%H:%M"), offset_str), GeoPos(lat, lon))
-        asc, moon, sun = chart.get(const.ASC), chart.get(const.MOON), chart.get(const.SUN)
-        planets = {p: {'sign': chart.get(p).sign, 'longitude': chart.get(p).lon} 
-                   for p in [const.SUN, const.MOON, const.MERCURY, const.VENUS, const.MARS, const.JUPITER, const.SATURN]}
-        return {"ascendant": RASHIS[RASHI_MAPPING.get(asc.sign, 0)], "moon_sign": RASHIS[RASHI_MAPPING.get(moon.sign, 0)],
-                "moon_longitude": moon.lon, "nakshatra": calculate_nakshatra(moon.lon),
-                "sun_sign": RASHIS[RASHI_MAPPING.get(sun.sign, 0)], "planets": planets, "timezone": str(tz)}
-    except Exception as e: st.error(f"차트 계산 오류: {e}"); return None
+Based on the birth data provided, you will:
+1. Calculate the Vedic birth chart parameters (Lagna, Moon Sign, Nakshatra, Sun Sign)
+2. Analyze the Ashta Kuta compatibility between two people
+3. Provide scores for all 8 Kutas converted to 100-point scale
 
-def create_south_indian_chart(chart_data, name):
-    houses = [""] * 12
-    if chart_data and 'planets' in chart_data:
-        symbols = {'Sun': '☉', 'Moon': '☽', 'Mercury': '☿', 'Venus': '♀', 'Mars': '♂', 'Jupiter': '♃', 'Saturn': '♄'}
-        for p, info in chart_data['planets'].items():
-            houses[RASHI_MAPPING.get(info['sign'], 0)] += symbols.get(p, p[:2]) + " "
-    if chart_data:
-        for i, r in enumerate(RASHIS):
-            if chart_data['ascendant'] == r: houses[i] = "★ASC★<br>" + houses[i]; break
-    signs = ["물고기","양","황소","쌍둥이","물병","","","게","염소","","","사자","사수","전갈","천칭","처녀"]
-    idx = [[11,0,1,2],[10,-1,-1,3],[9,-1,-1,4],[8,7,6,5]]
-    html = f'<div style="text-align:center;"><h4 style="color:#ffd700;">🌙 {name}의 베딕 차트</h4><table style="margin:0 auto;border-collapse:collapse;background:linear-gradient(135deg,#1a1a2e,#16213e);">'
-    for row in idx:
-        html += '<tr>'
-        for c in row:
-            if c == -1: continue
-            cs = ' colspan="2" rowspan="2"' if c == -1 else ''
-            content = f'<b>{["물고기","양","황소","쌍둥이","게","사자","처녀","천칭","전갈","사수","염소","물병"][c]}</b><br>{houses[c]}' if c >= 0 else ''
-            html += f'<td style="width:70px;height:50px;border:2px solid #ffd700;text-align:center;color:#e0e0e0;font-size:10px;"{cs}>{content}</td>'
-        html += '</tr>'
-    return html + '</table></div>'
+Be sophisticated, mysterious, and brutally honest.
+If the stars say it's a disaster, call it a celestial catastrophe.
+Format your ENTIRE response in Korean (한국어)."""
 
-def analyze_compatibility_with_openai(p1, p2, n1, n2):
-    system = """You are a master of Vedic Astrology with 30 years of experience. Analyze the 'Ashta Kuta' compatibility between these two sets of birth data. Be sophisticated, mysterious, and brutally honest. If the stars say it's a disaster, call it a celestial catastrophe. Format your entire response in Korean. IMPORTANT: Convert the traditional 36-point scale to 100-point scale for easier understanding."""
-    user = f"""다음 두 사람의 베딕 점성술 데이터를 바탕으로 아쉬타쿠타 궁합을 분석해주세요:
-【{n1}】라그나: {p1['ascendant']}, 라시: {p1['moon_sign']}, 낙샤트라: {p1['nakshatra']}, 태양: {p1['sun_sign']}
-【{n2}】라그나: {p2['ascendant']}, 라시: {p2['moon_sign']}, 낙샤트라: {p2['nakshatra']}, 태양: {p2['sun_sign']}
-8가지 쿠타를 분석하고, 각 쿠타 점수와 총점을 100점 만점 스케일로 환산하여 제공해주세요. (원래 36점 만점 → 100점 만점으로 변환)"""
+    user = f"""다음 두 사람의 출생 정보를 바탕으로 베딕 점성술 분석을 해주세요:
+
+【첫 번째 사람: {p1_data['name']}】
+- 생년월일: {p1_data['birth_date']}
+- 출생 시간: {p1_data['birth_time']}
+- 출생 장소: {p1_data['city']} (위도: {p1_data['lat']:.4f}, 경도: {p1_data['lon']:.4f})
+- 시간대: {p1_data['timezone']}
+
+【두 번째 사람: {p2_data['name']}】
+- 생년월일: {p2_data['birth_date']}
+- 출생 시간: {p2_data['birth_time']}
+- 출생 장소: {p2_data['city']} (위도: {p2_data['lat']:.4f}, 경도: {p2_data['lon']:.4f})
+- 시간대: {p2_data['timezone']}
+
+다음을 수행해주세요:
+1. 각 사람의 베딕 차트 파라미터 계산 (Lahiri Ayanamsa 사용):
+   - 라그나 (상승궁/Ascendant)
+   - 달 별자리 (라시/Moon Sign)
+   - 낙샤트라 (Nakshatra) 및 파다
+   - 태양 별자리 (Sun Sign)
+
+2. 아쉬타쿠타 궁합 분석 (100점 만점 스케일):
+   - 바르나 쿠타 (~3점): 영적 호환성
+   - 바쉬야 쿠타 (~6점): 상호 매력
+   - 타라 쿠타 (~8점): 운명과 건강
+   - 요니 쿠타 (~11점): 친밀함
+   - 그라하 마이트리 (~14점): 정신적 호환성
+   - 가나 쿠타 (~17점): 기질
+   - 바쿠트 쿠타 (~19점): 감정적 조화
+   - 나디 쿠타 (~22점): 건강과 자녀
+   - 총점: X/100점
+
+3. 종합 궁합 해석 (신비롭고 심오하게)
+
+궁합이 나쁘면 "천체적 재앙"이라고 솔직하게 표현해주세요."""
+
     try:
         client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-        return client.chat.completions.create(model="gpt-4o", messages=[{"role":"system","content":system},{"role":"user","content":user}], temperature=0.8, max_tokens=2000).choices[0].message.content
-    except Exception as e: return f"❌ API 오류: {e}"
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+            temperature=0.8,
+            max_tokens=3000
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"❌ API 오류: {e}"
 
 def apply_custom_css():
     st.markdown("""<style>
@@ -102,6 +110,8 @@ def apply_custom_css():
     .info-card{background:rgba(255,215,0,0.1);border-left:4px solid #ffd700;padding:15px;margin:10px 0;border-radius:0 10px 10px 0;}
     .result-box{background:linear-gradient(135deg,rgba(26,26,46,0.9),rgba(22,33,62,0.9));border:2px solid #ffd700;border-radius:15px;padding:25px;margin:20px 0;box-shadow:0 0 30px rgba(255,215,0,0.2);}
     .vedic-info{background:rgba(139,69,19,0.2);border:1px solid #daa520;border-radius:15px;padding:20px;margin:20px 0;}
+    p,li,td,th{color:#ffffff!important;}
+    label{color:#ffd700!important;}
     </style>""", unsafe_allow_html=True)
 
 def show_vedic_info():
@@ -161,41 +171,72 @@ def main():
         name1 = st.text_input("이름", key="n1", placeholder="이름")
         date1 = st.date_input("생년월일", key="d1", value=date(1990,1,1))
         time1 = st.time_input("출생 시간", key="t1", value=time(12,0))
-        city1 = st.text_input("출생 도시", key="c1", placeholder="예: Seoul")
+        city1 = st.text_input("출생 도시", key="c1", placeholder="예: Seoul 또는 서울")
     with col2:
         st.markdown("### ⭐ 두 번째 사람")
         name2 = st.text_input("이름", key="n2", placeholder="이름")
         date2 = st.date_input("생년월일", key="d2", value=date(1990,1,1))
         time2 = st.time_input("출생 시간", key="t2", value=time(12,0))
-        city2 = st.text_input("출생 도시", key="c2", placeholder="예: Busan")
+        city2 = st.text_input("출생 도시", key="c2", placeholder="예: Busan 또는 부산")
 
     st.markdown("---")
     _, btn_col, _ = st.columns([1,2,1])
     with btn_col:
         if st.button("🔮 운명의 궁합 분석하기 🔮", use_container_width=True):
-            if not all([name1, name2, city1, city2]): st.error("❌ 모든 필드를 입력해주세요!"); return
-            with st.spinner("🌌 별들의 위치를 계산중..."):
-                lat1, lon1 = get_location_coordinates(city1)
-                lat2, lon2 = get_location_coordinates(city2)
-                if not lat1: st.error(f"❌ '{city1}' 위치를 찾을 수 없습니다."); return
-                if not lat2: st.error(f"❌ '{city2}' 위치를 찾을 수 없습니다."); return
-                chart1, chart2 = calculate_vedic_chart(date1, time1, lat1, lon1), calculate_vedic_chart(date2, time2, lat2, lon2)
-                if not chart1 or not chart2: return
+            if not all([name1, name2, city1, city2]):
+                st.error("❌ 모든 필드를 입력해주세요!")
+                return
 
-            st.markdown("## 🌠 베딕 차트 분석 결과")
+            with st.spinner("🌌 출생 장소 정보를 확인중..."):
+                lat1, lon1, addr1 = get_location_coordinates(city1)
+                lat2, lon2, addr2 = get_location_coordinates(city2)
+
+                if not lat1:
+                    st.error(f"❌ '{city1}' 위치를 찾을 수 없습니다.")
+                    return
+                if not lat2:
+                    st.error(f"❌ '{city2}' 위치를 찾을 수 없습니다.")
+                    return
+
+                tz1 = get_timezone(lat1, lon1)
+                tz2 = get_timezone(lat2, lon2)
+
+            st.markdown("## 🌠 입력된 출생 정보")
             c1, c2 = st.columns(2)
             with c1:
-                st.markdown(f'<div class="info-card"><h4 style="color:#ffd700;">🌙 {name1}</h4><p>🏠 라그나: {chart1["ascendant"]}</p><p>🌙 라시: {chart1["moon_sign"]}</p><p>⭐ 낙샤트라: {chart1["nakshatra"]}</p><p>☀️ 태양: {chart1["sun_sign"]}</p></div>', unsafe_allow_html=True)
-                st.markdown(create_south_indian_chart(chart1, name1), unsafe_allow_html=True)
+                st.markdown(f'''<div class="info-card">
+                    <h4 style="color:#ffd700;">🌙 {name1}</h4>
+                    <p>📅 생년월일: {date1}</p>
+                    <p>⏰ 출생 시간: {time1}</p>
+                    <p>📍 출생 장소: {addr1 or city1}</p>
+                    <p>🌍 시간대: {tz1}</p>
+                </div>''', unsafe_allow_html=True)
             with c2:
-                st.markdown(f'<div class="info-card"><h4 style="color:#ffd700;">⭐ {name2}</h4><p>🏠 라그나: {chart2["ascendant"]}</p><p>🌙 라시: {chart2["moon_sign"]}</p><p>⭐ 낙샤트라: {chart2["nakshatra"]}</p><p>☀️ 태양: {chart2["sun_sign"]}</p></div>', unsafe_allow_html=True)
-                st.markdown(create_south_indian_chart(chart2, name2), unsafe_allow_html=True)
+                st.markdown(f'''<div class="info-card">
+                    <h4 style="color:#ffd700;">⭐ {name2}</h4>
+                    <p>📅 생년월일: {date2}</p>
+                    <p>⏰ 출생 시간: {time2}</p>
+                    <p>📍 출생 장소: {addr2 or city2}</p>
+                    <p>🌍 시간대: {tz2}</p>
+                </div>''', unsafe_allow_html=True)
 
             st.markdown("---")
             st.markdown("## 🔮 아쉬타쿠타 궁합 분석")
-            with st.spinner("✨ 우주의 신비가 해석중..."):
-                analysis = analyze_compatibility_with_openai(chart1, chart2, name1, name2)
-            st.markdown(f'<div class="result-box"><h3 style="color:#ffd700;text-align:center;">💫 {name1} & {name2}의 운명적 궁합 💫</h3><hr style="border-color:#ffd700;opacity:0.3;"><div style="color:#e0e0e0;line-height:1.8;">{analysis.replace(chr(10),"<br>")}</div></div>', unsafe_allow_html=True)
-            st.markdown('<p style="text-align:center;color:#666;font-size:12px;">⚠️ 이 분석은 오락 목적입니다. 실제 관계는 상호 이해와 존중이 기반입니다.</p>', unsafe_allow_html=True)
 
-if __name__ == "__main__": main()
+            with st.spinner("✨ 베딕 차트를 계산하고 우주의 신비를 해석중... (약 30초 소요)"):
+                p1_data = {"name": name1, "birth_date": str(date1), "birth_time": str(time1),
+                          "city": city1, "lat": lat1, "lon": lon1, "timezone": tz1}
+                p2_data = {"name": name2, "birth_date": str(date2), "birth_time": str(time2),
+                          "city": city2, "lat": lat2, "lon": lon2, "timezone": tz2}
+                analysis = analyze_compatibility_with_openai(p1_data, p2_data)
+
+            st.markdown(f'''<div class="result-box">
+                <h3 style="color:#ffd700;text-align:center;">💫 {name1} & {name2}의 운명적 궁합 💫</h3>
+                <hr style="border-color:#ffd700;opacity:0.3;">
+                <div style="color:#e0e0e0;line-height:1.8;">{analysis.replace(chr(10),"<br>")}</div>
+            </div>''', unsafe_allow_html=True)
+
+            st.markdown('<p style="text-align:center;color:#888;font-size:12px;">⚠️ 이 분석은 오락 목적입니다. 실제 관계는 상호 이해와 존중이 기반입니다.</p>', unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
