@@ -65,6 +65,16 @@ def calculate_chart(name, year, month, day, hour, minute, lat, lon, tz_str):
         # 행성 정보 추출
         moon_lon = subject.moon.abs_pos
         sun_lon = subject.sun.abs_pos
+        rahu_lon = subject.mean_node.abs_pos
+        
+        # Ketu는 Rahu의 정반대 (180도, 즉 6개 별자리 반대편)
+        ketu_lon = (rahu_lon + 180) % 360
+        rahu_sign = subject.mean_node.sign
+        
+        # Ketu 별자리 계산 (Rahu에서 6칸 반대)
+        sign_order = ["Ari", "Tau", "Gem", "Can", "Leo", "Vir", "Lib", "Sco", "Sag", "Cap", "Aqu", "Pis"]
+        rahu_idx = sign_order.index(rahu_sign) if rahu_sign in sign_order else 0
+        ketu_sign = sign_order[(rahu_idx + 6) % 12]
         
         chart_data = {
             "name": name,
@@ -73,8 +83,10 @@ def calculate_chart(name, year, month, day, hour, minute, lat, lon, tz_str):
             "moon_lon": moon_lon,
             "nakshatra": get_nakshatra(moon_lon),
             "sun_sign": RASHI_KO.get(subject.sun.sign, subject.sun.sign),
-            "rahu": RASHI_KO.get(subject.mean_node.sign, subject.mean_node.sign),
-            "ketu": RASHI_KO.get(subject.mean_node.sign, "반대편"),  # Ketu는 Rahu 반대
+            "rahu": RASHI_KO.get(rahu_sign, rahu_sign),
+            "rahu_lon": rahu_lon,
+            "ketu": RASHI_KO.get(ketu_sign, ketu_sign),
+            "ketu_lon": ketu_lon,
             "planets": {
                 "태양": {"sign": RASHI_KO.get(subject.sun.sign, subject.sun.sign), "lon": subject.sun.abs_pos},
                 "달": {"sign": RASHI_KO.get(subject.moon.sign, subject.moon.sign), "lon": subject.moon.abs_pos},
@@ -83,7 +95,8 @@ def calculate_chart(name, year, month, day, hour, minute, lat, lon, tz_str):
                 "화성": {"sign": RASHI_KO.get(subject.mars.sign, subject.mars.sign), "lon": subject.mars.abs_pos},
                 "목성": {"sign": RASHI_KO.get(subject.jupiter.sign, subject.jupiter.sign), "lon": subject.jupiter.abs_pos},
                 "토성": {"sign": RASHI_KO.get(subject.saturn.sign, subject.saturn.sign), "lon": subject.saturn.abs_pos},
-                "라후": {"sign": RASHI_KO.get(subject.mean_node.sign, subject.mean_node.sign), "lon": subject.mean_node.abs_pos},
+                "라후": {"sign": RASHI_KO.get(rahu_sign, rahu_sign), "lon": rahu_lon},
+                "케투": {"sign": RASHI_KO.get(ketu_sign, ketu_sign), "lon": ketu_lon},
             }
         }
         return chart_data
@@ -144,6 +157,81 @@ def calculate_ashta_kuta(chart1, chart2):
     total = sum(scores.values())
     return scores, total
 
+def create_kundli_chart(chart_data, name):
+    """South Indian 스타일 Kundli 차트 생성"""
+    # 별자리 순서 (South Indian: 물고기자리부터 시작, 시계방향)
+    signs_order = ["Pis", "Ari", "Tau", "Gem", "Can", "Leo", "Vir", "Lib", "Sco", "Sag", "Cap", "Aqu"]
+    signs_ko = ["♓물고기", "♈양", "♉황소", "♊쌍둥이", "♋게", "♌사자", "♍처녀", "♎천칭", "♏전갈", "♐사수", "♑염소", "♒물병"]
+    
+    # 각 하우스에 있는 행성 찾기
+    houses = {i: [] for i in range(12)}
+    
+    planet_symbols = {
+        "태양": "☉", "달": "☽", "수성": "☿", "금성": "♀", 
+        "화성": "♂", "목성": "♃", "토성": "♄", "라후": "☊", "케투": "☋"
+    }
+    
+    for planet, info in chart_data.get("planets", {}).items():
+        lon = info.get("lon", 0)
+        house_idx = int(lon / 30) % 12
+        houses[house_idx].append(planet_symbols.get(planet, planet[:1]))
+    
+    # 상승궁 표시
+    asc_sign = chart_data.get("ascendant", "")
+    for i, sign in enumerate(signs_order):
+        if sign in asc_sign or RASHI_KO.get(sign, "") == asc_sign:
+            houses[i].insert(0, "▲")
+            break
+    
+    # South Indian 차트 레이아웃 (4x4 그리드, 중앙 2x2는 비움)
+    # [11][0][1][2]
+    # [10][ ][ ][3]
+    # [9][ ][ ][4]
+    # [8][7][6][5]
+    layout = [
+        [11, 0, 1, 2],
+        [10, -1, -1, 3],
+        [9, -1, -1, 4],
+        [8, 7, 6, 5]
+    ]
+    
+    html = f'''
+    <div style="text-align:center;margin:10px 0;">
+        <h4 style="color:#ffd700;margin-bottom:10px;">🔮 {name}의 Kundli 차트</h4>
+        <table style="margin:0 auto;border-collapse:collapse;background:linear-gradient(135deg,#1a1a2e,#16213e);">
+    '''
+    
+    for row_idx, row in enumerate(layout):
+        html += '<tr>'
+        for col_idx, house_idx in enumerate(row):
+            if house_idx == -1:
+                # 중앙 빈 공간 (첫 번째 -1에서만 colspan/rowspan 적용)
+                if row_idx == 1 and col_idx == 1:
+                    html += f'''<td colspan="2" rowspan="2" style="width:120px;height:100px;
+                        background:linear-gradient(135deg,#0d0d1a,#1a1a2e);
+                        border:2px solid #ffd700;text-align:center;color:#ffd700;font-size:12px;">
+                        <div>라시: {chart_data.get('moon_sign', '')[:4]}</div>
+                        <div style="font-size:10px;color:#aaa;">{chart_data.get('nakshatra', '')[:6]}</div>
+                    </td>'''
+            else:
+                planets_str = " ".join(houses[house_idx])
+                html += f'''<td style="width:60px;height:50px;border:2px solid #ffd700;
+                    text-align:center;vertical-align:top;padding:3px;
+                    color:#fff;font-size:11px;background:rgba(255,215,0,0.05);">
+                    <div style="color:#ffd700;font-size:9px;font-weight:bold;">{signs_ko[house_idx]}</div>
+                    <div style="font-size:14px;margin-top:2px;">{planets_str}</div>
+                </td>'''
+        html += '</tr>'
+    
+    html += '''
+        </table>
+        <div style="font-size:10px;color:#888;margin-top:5px;">
+            ▲=상승궁 ☉=태양 ☽=달 ☿=수성 ♀=금성 ♂=화성 ♃=목성 ♄=토성 ☊=라후 ☋=케투
+        </div>
+    </div>
+    '''
+    return html
+
 def analyze_with_openai(chart1, chart2, scores, total, name1, name2):
     """계산된 데이터로 LLM이 해석만 제공"""
     system = """You are a master of Vedic Astrology (Jyotish) with 30 years of experience.
@@ -167,14 +255,16 @@ DO NOT change or recalculate the scores - they are FIXED."""
 - 달 별자리 (라시): {chart1['moon_sign']}
 - 낙샤트라: {chart1['nakshatra']}
 - 태양 별자리: {chart1['sun_sign']}
-- 라후 위치: {chart1['rahu']}
+- 라후 (북쪽 달의 교점): {chart1['rahu']}
+- 케투 (남쪽 달의 교점, 라후의 180도 반대편): {chart1['ketu']}
 
 ## 【{name2}의 차트】
 - 라그나 (상승궁): {chart2['ascendant']}
 - 달 별자리 (라시): {chart2['moon_sign']}
 - 낙샤트라: {chart2['nakshatra']}
 - 태양 별자리: {chart2['sun_sign']}
-- 라후 위치: {chart2['rahu']}
+- 라후 (북쪽 달의 교점): {chart2['rahu']}
+- 케투 (남쪽 달의 교점, 라후의 180도 반대편): {chart2['ketu']}
 
 ## 【아쉬타쿠타 점수 (이미 계산됨 - 변경 불가)】
 - 바르나 쿠타: {scores['바르나']}/3점
@@ -307,6 +397,7 @@ def main():
 - ⭐ 낙샤트라: {chart1['nakshatra']}
 - ☀️ 태양: {chart1['sun_sign']}
 - 🐉 라후: {chart1['rahu']}
+- 🔮 케투: {chart1['ketu']}
                 """)
             with c2:
                 st.markdown(f"""
@@ -316,7 +407,16 @@ def main():
 - ⭐ 낙샤트라: {chart2['nakshatra']}
 - ☀️ 태양: {chart2['sun_sign']}
 - 🐉 라후: {chart2['rahu']}
+- 🔮 케투: {chart2['ketu']}
                 """)
+
+            # Kundli 차트 표시
+            st.markdown("### 🔮 Kundli 차트 (South Indian Style)")
+            k1, k2 = st.columns(2)
+            with k1:
+                st.markdown(create_kundli_chart(chart1, name1), unsafe_allow_html=True)
+            with k2:
+                st.markdown(create_kundli_chart(chart2, name2), unsafe_allow_html=True)
 
             st.markdown("---")
             st.markdown("## � 아쉬타쿠타 점수 (정밀 계산)")
