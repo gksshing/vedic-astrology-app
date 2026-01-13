@@ -109,12 +109,14 @@ def apply_custom_css():
     .stButton>button{background:linear-gradient(135deg,#ffd700,#ff8c00)!important;color:#1a1a2e!important;border:none!important;border-radius:25px!important;padding:15px 40px!important;font-weight:bold!important;box-shadow:0 0 20px rgba(255,215,0,0.4)!important;}
     .info-card{background:rgba(255,215,0,0.1);border-left:4px solid #ffd700;padding:15px;margin:10px 0;border-radius:0 10px 10px 0;}
     .result-box{background:linear-gradient(135deg,rgba(26,26,46,0.9),rgba(22,33,62,0.9));border:2px solid #ffd700;border-radius:15px;padding:25px;margin:20px 0;box-shadow:0 0 30px rgba(255,215,0,0.2);}
-    p,li,td,th,span{color:#ffffff!important;}
+    p,li,td,th{color:#ffffff!important;}
     label{color:#ffd700!important;}
     .stExpander{border:1px solid #ffd700!important;border-radius:10px!important;}
-    .stDateInput select{color:#000000!important;background-color:#ffffff!important;}
-    [data-baseweb="select"] span{color:#000000!important;}
-    [data-baseweb="popover"] div{color:#000000!important;}
+    div[data-baseweb="popover"] *{color:#000000!important;}
+    div[data-baseweb="calendar"] *{color:#000000!important;}
+    div[data-baseweb="select"] ul li{color:#000000!important;}
+    div[role="listbox"] *{color:#000000!important;}
+    [data-baseweb="menu"] *{color:#000000!important;}
     </style>""", unsafe_allow_html=True)
 
 def show_vedic_info():
